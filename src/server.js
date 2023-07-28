@@ -2,39 +2,24 @@
 
 import http from 'node:http' // jeito mais atualizado de importar (ESModules)
 import { json } from './middlewares/json.js'
-import { Database } from './middlewares/database.js'
-import { randomUUID } from 'node:crypto';
-
-const database = new Database();
+import { routes } from './middlewares/routes.js'
 
 const server = http.createServer(async (req, res) => {
     const { method, url } = req
 
     await json(req, res)
 
-    if (method == 'GET' && url == '/users') {
-        const users = database.select('users');
-        return res
-            .setHeader('Content-type', 'application/json') // especifica o tipo de conteúdo da resposta
-            .end(JSON.stringify(users))
-    }   
+    // route vai receber a rota correspondente à ação desejada
+    const route = routes.find(route => {
+        return route.method == method && route.path == url
+    })
     
-    if (method == 'POST' && url == '/users') { // adicionar informações
-        const { name, email } = req.body
-        
-        const user = {
-            id: randomUUID,
-            name,
-            email,
-        }
-
-        database.insert('users', user);
-
-        return res.writeHead(201).end();
+    // se a rota existir, executa a ação dela
+    if (route) {
+        return route.handler(req, res)
     }
-    
-    return res.writeHead(404).end();
 
+    return res.writeHead(404).end();
 })
 
 server.listen(3333);
