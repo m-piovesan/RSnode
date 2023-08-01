@@ -16,6 +16,8 @@ const server = http.createServer(async (req, res) => {
     
     // se a rota existir, executa a ação dela
     if (route) {
+        const routeParams = req.url.match(route.path)
+
         return route.handler(req, res)
     }
 
